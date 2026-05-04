@@ -1,0 +1,75 @@
+#include <Wire.h>
+#include <Adafruit_PWMServoDriver.h>
+
+Adafruit_PWMServoDriver pwm1 = Adafruit_PWMServoDriver(0x40);
+Adafruit_PWMServoDriver pwm2 = Adafruit_PWMServoDriver(0x41);
+
+#define SERVOMIN  150
+#define SERVOMAX  600
+#define SERVO_FREQ 50
+
+uint8_t arm_seg1[] = {12, 15, 5, 13, 14};
+uint8_t arm_seg2[] = {6, 10, 11, 4, 31};
+uint8_t arm_seg3[] = {0, 1, 2, 7, 3};
+uint8_t arm_seg4[] = {25, 24, 16, 30, 23};
+uint8_t arm_seg5[] = {17, 8, 18, 20, 19};
+uint8_t wrist[]    = {9, 29, 21};
+
+#define SEG_SIZE 5
+#define WRIST_SIZE 3
+
+void setup() {
+  Serial.begin(115200);
+  delay(2000);
+
+  pwm1.begin();
+  pwm1.setOscillatorFrequency(27000000);
+  pwm1.setPWMFreq(SERVO_FREQ);
+
+  pwm2.begin();
+  pwm2.setOscillatorFrequency(27000000);
+  pwm2.setPWMFreq(SERVO_FREQ);
+
+  Serial.println("All arms ready.");
+}
+
+void setServo(uint8_t servoIndex, uint16_t pulselen) {
+  if (servoIndex >= 32) return;
+  Adafruit_PWMServoDriver &pwm = (servoIndex < 16) ? pwm1 : pwm2;
+  uint8_t channel = (servoIndex < 16) ? servoIndex : servoIndex - 16;
+  pwm.setPWM(channel, 0, pulselen);
+}
+
+void sweepGroup(uint8_t *servos, uint8_t count, const char* name) {
+  Serial.print("Sweeping: ");
+  Serial.println(name);
+
+  for (uint16_t pulselen = SERVOMIN; pulselen < SERVOMAX; pulselen++) {
+    for (uint8_t i = 0; i < count; i++) {
+      setServo(servos[i], pulselen);
+    }
+    delay(3);
+  }
+
+  delay(200);
+
+  for (uint16_t pulselen = SERVOMAX; pulselen > SERVOMIN; pulselen--) {
+    for (uint8_t i = 0; i < count; i++) {
+      setServo(servos[i], pulselen);
+    }
+    delay(3);
+  }
+
+  delay(500);
+}
+
+void loop() {
+  sweepGroup(arm_seg1, SEG_SIZE, "Arm Segment 1");
+  sweepGroup(arm_seg2, SEG_SIZE, "Arm Segment 2");
+  sweepGroup(arm_seg3, SEG_SIZE, "Arm Segment 3");
+  sweepGroup(arm_seg4, SEG_SIZE, "Arm Segment 4");
+  sweepGroup(arm_seg5, SEG_SIZE, "Arm Segment 5");
+  sweepGroup(wrist, WRIST_SIZE, "Wrist");
+
+  delay(1000);
+}
