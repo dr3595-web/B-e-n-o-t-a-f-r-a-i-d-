@@ -1,0 +1,72 @@
+#include <MIDIUSB.h>
+#include <MIDIUSB_Defs.h>
+#include <frequencyToNote.h>
+#include <pitchToFrequency.h>
+#include <pitchToNote.h>
+
+const int S0 = A2;
+const int S1 = A3;
+const int S2 = A6;
+const int S3 = A7;
+const int SIG = A0;
+
+int prevRead = 680;
+int curRead = 0;
+bool isFlexxing = false;
+
+int flexValues[16];
+
+void selectChannel(int ch) {
+  digitalWrite(S0, (ch & 1) ? HIGH : LOW);
+  digitalWrite(S1, (ch & 2) ? HIGH : LOW);
+  digitalWrite(S2, (ch & 4) ? HIGH : LOW);
+  digitalWrite(S3, (ch & 8) ? HIGH : LOW);
+}
+
+void setup() {
+  pinMode(S0, OUTPUT);
+  pinMode(S1, OUTPUT);
+  pinMode(S2, OUTPUT);
+  pinMode(S3, OUTPUT);
+  Serial.begin(9600);
+
+  digitalWrite(S0, LOW);
+  digitalWrite(S1, LOW);
+  digitalWrite(S2, LOW);
+  digitalWrite(S3, LOW);
+}
+
+void readAllChannels() {
+  selectChannel(0);  delayMicroseconds(500); flexValues[0]  = analogRead(SIG);
+  selectChannel(2);  delayMicroseconds(500); flexValues[2]  = analogRead(SIG);
+  selectChannel(4);  delayMicroseconds(500); flexValues[4]  = analogRead(SIG);
+  selectChannel(6);  delayMicroseconds(500); flexValues[6]  = analogRead(SIG);
+  selectChannel(7);  delayMicroseconds(500); flexValues[7]  = analogRead(SIG);
+  selectChannel(8);  delayMicroseconds(500); flexValues[8]  = analogRead(SIG);
+  selectChannel(10); delayMicroseconds(500); flexValues[10] = analogRead(SIG);
+  selectChannel(11); delayMicroseconds(500); flexValues[11] = analogRead(SIG);
+  selectChannel(12); delayMicroseconds(500); flexValues[12] = analogRead(SIG);
+  selectChannel(13); delayMicroseconds(500); flexValues[13] = analogRead(SIG);
+  selectChannel(14); delayMicroseconds(500); flexValues[14] = analogRead(SIG);
+}
+
+void loop() {
+  readAllChannels();
+  curRead = flexValues[8];
+
+  bool flexed = (prevRead - curRead) > 16;
+  if (flexed && !isFlexxing) {
+    Serial.print(curRead);
+    Serial.println(" | flexed");
+    isFlexxing = true;
+  } else if (!flexed && isFlexxing) {
+    isFlexxing = false;
+  }
+
+  prevRead = curRead;
+}
+
+void controlChange(byte channel, byte control, byte value) {
+  midiEventPacket_t event = {0x0B, 0xB0 | channel, control, value};
+  MidiUSB.sendMIDI(event);
+}
