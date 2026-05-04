@@ -1,0 +1,61 @@
+const int S0 = A2;
+const int S1 = A3;
+const int S2 = A6;
+const int S3 = A7;
+const int SIG = A0;
+
+int flexValues[16];
+
+void selectChannel(int ch) {
+  digitalWrite(S0, (ch & 1) ? HIGH : LOW);
+  digitalWrite(S1, (ch & 2) ? HIGH : LOW);
+  digitalWrite(S2, (ch & 4) ? HIGH : LOW);
+  digitalWrite(S3, (ch & 8) ? HIGH : LOW);
+}
+
+void setup() {
+  pinMode(S0, OUTPUT);
+  pinMode(S1, OUTPUT);
+  pinMode(S2, OUTPUT);
+  pinMode(S3, OUTPUT);
+  Serial.begin(9600);
+
+  digitalWrite(S0, LOW);
+  digitalWrite(S1, LOW);
+  digitalWrite(S2, LOW);
+  digitalWrite(S3, LOW);
+}
+
+void readAllChannels() {
+  selectChannel(0);  delayMicroseconds(500); flexValues[0]  = analogRead(SIG);
+  selectChannel(2);  delayMicroseconds(500); flexValues[2]  = analogRead(SIG);
+  selectChannel(4);  delayMicroseconds(500); flexValues[4]  = analogRead(SIG);
+  selectChannel(6);  delayMicroseconds(500); flexValues[6]  = analogRead(SIG);
+
+  selectChannel(7);  delayMicroseconds(500); flexValues[7]  = analogRead(SIG);
+
+  selectChannel(8);  delayMicroseconds(500); flexValues[8]  = analogRead(SIG);
+  selectChannel(10); delayMicroseconds(500); flexValues[10] = analogRead(SIG);
+  selectChannel(11); delayMicroseconds(500); flexValues[11] = analogRead(SIG);
+  selectChannel(12); delayMicroseconds(500); flexValues[12] = analogRead(SIG);
+  selectChannel(13); delayMicroseconds(500); flexValues[13] = analogRead(SIG);
+  selectChannel(14); delayMicroseconds(500); flexValues[14] = analogRead(SIG);
+}
+
+void loop() {
+  readAllChannels();
+
+  Serial.print("Channel 0: ");  Serial.print(flexValues[0]);  Serial.print(" ");
+  Serial.print("Channel 2: ");  Serial.print(flexValues[2]);  Serial.print(" ");
+  Serial.print("Channel 4: ");  Serial.print(flexValues[4]);  Serial.print(" ");
+  Serial.print("Channel 6: ");  Serial.print(flexValues[6]);  Serial.print(" ");
+  Serial.print("Channel 7: ");  Serial.print(flexValues[7]);  Serial.print(" ");
+  Serial.print("Channel 8: ");  Serial.print(flexValues[8]);  Serial.print(" ");
+  Serial.print("Channel 10: "); Serial.print(flexValues[10]); Serial.print(" ");
+  Serial.print("Channel 11: "); Serial.print(flexValues[11]); Serial.print(" ");
+  Serial.print("Channel 12: "); Serial.print(flexValues[12]); Serial.print(" ");
+  Serial.print("Channel 13: "); Serial.print(flexValues[13]); Serial.print(" ");
+  Serial.print("Channel 14: "); Serial.print(flexValues[14]); Serial.print(" ");
+
+  Serial.println();
+}
