@@ -1,0 +1,87 @@
+#include <Wire.h>
+#include <Adafruit_PWMServoDriver.h>
+
+Adafruit_PWMServoDriver pwm1 = Adafruit_PWMServoDriver(0x40);
+Adafruit_PWMServoDriver pwm2 = Adafruit_PWMServoDriver(0x41);
+
+#define SERVOMIN  300
+#define SERVOMAX  420
+#define SERVO_FREQ 50
+
+int wrists[] = {
+  28,
+  27,
+  30,
+  29
+};
+
+const char* wristNames[] = {
+  "Wrist 1",
+  "Wrist 3",
+  "Wrist 4",
+  "Wrist 5"
+};
+
+void setup() {
+
+  Serial.begin(115200);
+
+  pwm1.begin();
+  pwm1.setOscillatorFrequency(27000000);
+  pwm1.setPWMFreq(SERVO_FREQ);
+
+  pwm2.begin();
+  pwm2.setOscillatorFrequency(27000000);
+  pwm2.setPWMFreq(SERVO_FREQ);
+
+  delay(1000);
+
+  Serial.println("Testing wrists...");
+}
+
+void sweepServo(int servoInput) {
+
+  Adafruit_PWMServoDriver* pwm;
+  uint8_t channel;
+
+  if (servoInput <= 16) {
+    pwm = &pwm1;
+    channel = servoInput - 1;
+  } else {
+    pwm = &pwm2;
+    channel = servoInput - 17;
+  }
+
+  Serial.print("Servo Input ");
+  Serial.print(servoInput);
+  Serial.print(" -> PCA Channel ");
+  Serial.println(channel);
+
+  for (uint16_t pulselen = SERVOMIN; pulselen < SERVOMAX; pulselen++) {
+    pwm->setPWM(channel, 0, pulselen);
+    delay(5);
+  }
+
+  delay(500);
+
+  for (uint16_t pulselen = SERVOMAX; pulselen > SERVOMIN; pulselen--) {
+    pwm->setPWM(channel, 0, pulselen);
+    delay(5);
+  }
+
+  delay(1200);
+}
+
+void loop() {
+
+  for (int i = 0; i < 4; i++) {
+
+    Serial.println("----------------");
+    Serial.println(wristNames[i]);
+
+    sweepServo(wrists[i]);
+  }
+
+  Serial.println("Cycle complete.");
+  delay(4000);
+}
