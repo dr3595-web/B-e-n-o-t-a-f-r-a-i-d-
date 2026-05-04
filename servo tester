@@ -1,0 +1,61 @@
+#include <Wire.h>
+#include <Adafruit_PWMServoDriver.h>
+
+Adafruit_PWMServoDriver pwm1 = Adafruit_PWMServoDriver(0x40);
+Adafruit_PWMServoDriver pwm2 = Adafruit_PWMServoDriver(0x41);
+
+#define SERVOMIN  150
+#define SERVOMAX  600
+#define SERVO_FREQ 50
+
+void setup() {
+  Serial.begin(115200);
+  delay(2000);
+
+  pwm1.begin();
+  pwm1.setOscillatorFrequency(27000000);
+  pwm1.setPWMFreq(SERVO_FREQ);
+
+  pwm2.begin();
+  pwm2.setOscillatorFrequency(27000000);
+  pwm2.setPWMFreq(SERVO_FREQ);
+
+  Serial.println("Enter servo number (1–32):");
+}
+
+void sweepServo(Adafruit_PWMServoDriver &pwm, uint8_t channel) {
+  Serial.print("Sweeping channel: ");
+  Serial.println(channel);
+
+  for (uint16_t pulselen = SERVOMIN; pulselen < SERVOMAX; pulselen++) {
+    pwm.setPWM(channel, 0, pulselen);
+    delay(3);
+  }
+
+  delay(300);
+
+  for (uint16_t pulselen = SERVOMAX; pulselen > SERVOMIN; pulselen--) {
+    pwm.setPWM(channel, 0, pulselen);
+    delay(3);
+  }
+
+  delay(300);
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    int servoInput = Serial.parseInt();
+
+    if (servoInput >= 1 && servoInput <= 32) {
+      Serial.print("Moving Servo ");
+      Serial.println(servoInput);
+
+      if (servoInput <= 16)
+        sweepServo(pwm1, servoInput - 1);
+      else
+        sweepServo(pwm2, servoInput - 17);
+    } else {
+      Serial.println("Invalid input. Enter 1–32.");
+    }
+  }
+}
